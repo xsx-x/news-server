@@ -151,7 +151,10 @@ async function fetchNews() {
             // בדיקה אם הידיעה כבר במערכת
             const exists = newsList.find(n => n.hash === hash);
 
-            if (!exists) {
+            // סינון ידיעות ישנות (מתעלם מידיעות שפורסמו לפני יותר מ-12 שעות)
+            const isTooOld = new Date(item.time).getTime() < (Date.now() - 12 * 60 * 60 * 1000);
+
+            if (!exists && !isTooOld) {
                 const newsItem = {
                     hash,
                     title: item.title,
@@ -160,18 +163,22 @@ async function fetchNews() {
                     time: item.time
                 };
 
-                // הוספה לראש הרשימה
-                newsList.unshift(newsItem);
-
-                // ניקוי זיכרון - שמירה רק על 200 ידיעות
-                if (newsList.length > MAX_NEWS) {
-                    newsList.pop();
-                }
+                // הוספה לרשימה
+                newsList.push(newsItem);
 
                 // שידור הידיעה החדשה בזמן אמת לכלל המשתמשים
                 broadcast(newsItem);
             }
         });
+
+        // מיון הרשימה מחדש לפי השעה המדויקת של הידיעה (מהחדש ביותר לישן ביותר)
+        newsList.sort((a, b) => new Date(b.time) - new Date(a.time));
+
+        // ניקוי זיכרון - שמירה רק על 200 ידיעות
+        if (newsList.length > MAX_NEWS) {
+            newsList = newsList.slice(0, MAX_NEWS);
+        }
+
     } catch (error) {
         console.error(`שגיאה במשיכת נתונים מ- ${channel.name}:`, error.message);
     }
