@@ -188,7 +188,7 @@ async function fetchNews() {
 }
 
 // הפעלת הסריקה כל 10 שניות (כפי שאופיין)
-setInterval(fetchNews, 10000);
+setInterval(fetchNews, 2000);
 fetchNews(); // הפעלה ראשונה מיד עם עליית השרת
 
 // ==========================================
