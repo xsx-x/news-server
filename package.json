@@ -1,15 +1,19 @@
 {
-  "name": "news-sse-server",
-  "version": "1.0.0",
-  "description": "שרת למשיכת חדשות ושידורן ב-SSE לתוסף כרום",
-  "main": "server.js",
-  "scripts": {
-    "start": "node server.js"
+  "manifest_version": 3,
+  "name": "מבזקי חדשות שומרי הלכה",
+  "version": "1.0",
+  "permissions": [
+    "storage",
+    "notifications",
+    "alarms" 
+  ],
+  "host_permissions": [
+    "https://my-news-api-l67d.onrender.com/*"
+  ],
+  "background": {
+    "service_worker": "background.js"
   },
-  "dependencies": {
-    "cheerio": "^1.0.0-rc.12",
-    "cors": "^2.8.5",
-    "express": "^4.18.2",
-    "rss-parser": "^3.13.0"
+  "action": {
+    "default_popup": "popup.html"
   }
 }
