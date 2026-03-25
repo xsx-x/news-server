@@ -10,7 +10,7 @@ app.use(cors());
 const parser = new Parser();
 let newsList = []; 
 let clients = []; 
-const MAX_NEWS = 1000; 
+const MAX_NEWS = 1000; // הגדלנו ל-1000 כדי שהתוסף יתמלא
 
 // רשימת הערוצים הנקייה (רק מקורות שומרי הלכה, הצלה וביטחון)
 const channels = [
@@ -61,7 +61,6 @@ const channels = [
     { name: "מגן דוד אדום", url: "https://t.me/s/mdaisrael", type: "telegram" },
     { name: "הלכה יומית", url: "https://t.me/s/halacha_yomit", type: "telegram" }
 ];
-let currentSourceIndex = 0;
 
 // ==========================================
 // חלק 1: נקודות קצה בשרת (API Endpoints)
@@ -105,121 +104,145 @@ function broadcast(newsItem) {
     });
 }
 
-async function fetchNews() {
-    if (channels.length === 0) return;
+// פונקציית העזר - מושכת נתונים מערוץ בודד
+async function fetchChannelData(channel) {
+    let itemsToProcess = [];
 
-    const channel = channels[currentSourceIndex];
-    try {
-        let itemsToProcess = [];
+    if (channel.type === 'rss') {
+        const feed = await parser.parseURL(channel.url);
+        itemsToProcess = feed.items.map(item => {
+            const rawContent = item.content || item.contentSnippet || '';
+            
+            // ניקוי יסודי של תגיות HTML קורחות (כמו <p> בערוץ 7)
+            let cleanText = cheerio.load(rawContent).text();
+            cleanText = cleanText.replace(/<[^>]+>/g, '').trim();
 
-        if (channel.type === 'rss') {
-            const feed = await parser.parseURL(channel.url);
-            itemsToProcess = feed.items.map(item => {
-                const rawContent = item.content || item.contentSnippet || '';
-                
-                // ניקוי יסודי של תגיות HTML קורחות (כמו <p> בערוץ 7)
-                let cleanText = cheerio.load(rawContent).text();
-                cleanText = cleanText.replace(/<[^>]+>/g, '').trim();
-
-                // חיפוש תמונה ב-RSS
-                let imageUrl = item.enclosure ? item.enclosure.url : null;
-                if (!imageUrl) {
-                    const imgMatch = rawContent.match(/<img[^>]+src="([^">]+)"/i);
-                    if (imgMatch) imageUrl = imgMatch[1];
-                }
-                
-                return {
-                    title: item.title,
-                    content: cleanText, 
-                    link: item.link,
-                    source: channel.name,
-                    imageUrl: imageUrl, // הוספנו תמונה
-                    time: item.isoDate || new Date().toISOString()
-                };
-            });
-        } else if (channel.type === 'telegram') {
-            const response = await fetch(channel.url);
-            const html = await response.text();
-            const $ = cheerio.load(html);
-
-            $('.tgme_widget_message').each((i, el) => {
-                const textEl = $(el).find('.tgme_widget_message_text');
-                if (!textEl.length) return;
-
-                let fullText = textEl.text().trim();
-                
-                // הסרת כיתובי התגובות מהסוף
-                fullText = fullText.replace(/\d+\s*תגובות/g, '').replace(/תגובה\s*אחת/g, '').replace(/\n+$/, '').trim();
-
-                // חלוקה חכמה לכותרת ותוכן כדי למנוע כפילויות
-                let lines = fullText.split('\n').map(l => l.trim()).filter(l => l.length > 0);
-                let title = lines.length > 0 ? lines[0] : '';
-                let content = lines.length > 1 ? lines.slice(1).join('\n') : '';
-
-                // חיתוך כותרות ארוכות מדי
-                if (title.length > 100) {
-                    content = title.substring(100) + (content ? '\n' + content : '');
-                    title = title.substring(0, 100) + '...';
-                }
-
-                // שליפת תמונה מטלגרם (אם יש)
-                let imageUrl = null;
-                const styleWrap = $(el).find('.tgme_widget_message_photo_wrap').attr('style');
-                if (styleWrap) {
-                    const match = styleWrap.match(/background-image:url\('([^']+)'\)/);
-                    if (match) imageUrl = match[1];
-                }
-                
-                const timeStr = $(el).find('time').attr('datetime');
-                const link = $(el).find('.tgme_widget_message_date').attr('href') || channel.url;
-
-                itemsToProcess.push({
-                    title: title,
-                    content: content, 
-                    link: link,
-                    source: channel.name,
-                    imageUrl: imageUrl, // הוספנו תמונה
-                    time: timeStr ? new Date(timeStr).toISOString() : new Date().toISOString()
-                });
-            });
-        }
-
-        itemsToProcess.reverse().forEach(item => { 
-            const hash = generateHash(item.title + item.content);
-            const exists = newsList.find(n => n.hash === hash);
-            const isTooOld = new Date(item.time).getTime() < (Date.now() - 12 * 60 * 60 * 1000);
-
-            if (!exists && !isTooOld) {
-                const newsItem = {
-                    hash,
-                    title: item.title,
-                    content: item.content, 
-                    link: item.link,
-                    source: item.source,
-                    imageUrl: item.imageUrl, // העברת התמונה הלאה למשתמשים
-                    time: item.time
-                };
-
-                newsList.push(newsItem);
-                broadcast(newsItem);
+            // חיפוש תמונה ב-RSS
+            let imageUrl = item.enclosure ? item.enclosure.url : null;
+            if (!imageUrl) {
+                const imgMatch = rawContent.match(/<img[^>]+src="([^">]+)"/i);
+                if (imgMatch) imageUrl = imgMatch[1];
             }
+            
+            return {
+                title: item.title,
+                content: cleanText, 
+                link: item.link,
+                source: channel.name,
+                imageUrl: imageUrl, // הוספנו תמונה
+                time: item.isoDate || new Date().toISOString()
+            };
         });
+    } else if (channel.type === 'telegram') {
+        const response = await fetch(channel.url);
+        const html = await response.text();
+        const $ = cheerio.load(html);
 
-        newsList.sort((a, b) => new Date(b.time) - new Date(a.time));
+        $('.tgme_widget_message').each((i, el) => {
+            const textEl = $(el).find('.tgme_widget_message_text');
+            if (!textEl.length) return;
 
-        if (newsList.length > MAX_NEWS) {
-            newsList = newsList.slice(0, MAX_NEWS);
-        }
+            let fullText = textEl.text().trim();
+            
+            // הסרת כיתובי התגובות מהסוף
+            fullText = fullText.replace(/\d+\s*תגובות/g, '').replace(/תגובה\s*אחת/g, '').replace(/\n+$/, '').trim();
 
-    } catch (error) {
-        console.error(`שגיאה במשיכת נתונים מ- ${channel.name}:`, error.message);
+            // חלוקה חכמה לכותרת ותוכן כדי למנוע כפילויות
+            let lines = fullText.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+            let title = lines.length > 0 ? lines[0] : '';
+            let content = lines.length > 1 ? lines.slice(1).join('\n') : '';
+
+            // חיתוך כותרות ארוכות מדי
+            if (title.length > 100) {
+                content = title.substring(100) + (content ? '\n' + content : '');
+                title = title.substring(0, 100) + '...';
+            }
+
+            // שליפת תמונה מטלגרם (אם יש)
+            let imageUrl = null;
+            const styleWrap = $(el).find('.tgme_widget_message_photo_wrap').attr('style');
+            if (styleWrap) {
+                const match = styleWrap.match(/background-image:url\('([^']+)'\)/);
+                if (match) imageUrl = match[1];
+            }
+            
+            const timeStr = $(el).find('time').attr('datetime');
+            const link = $(el).find('.tgme_widget_message_date').attr('href') || channel.url;
+
+            itemsToProcess.push({
+                title: title,
+                content: content, 
+                link: link,
+                source: channel.name,
+                imageUrl: imageUrl, 
+                time: timeStr ? new Date(timeStr).toISOString() : new Date().toISOString()
+            });
+        });
     }
 
-    currentSourceIndex = (currentSourceIndex + 1) % channels.length;
+    // מיון, סינון ושמירה בזיכרון השרת
+    itemsToProcess.reverse().forEach(item => { 
+        const hash = generateHash(item.title + item.content);
+        const exists = newsList.find(n => n.hash === hash);
+        
+        // הגדלנו את טווח הזמן ל-48 שעות כדי שהתוסף יתמלא!
+        const isTooOld = new Date(item.time).getTime() < (Date.now() - 48 * 60 * 60 * 1000);
+
+        if (!exists && !isTooOld) {
+            const newsItem = {
+                hash,
+                title: item.title,
+                content: item.content, 
+                link: item.link,
+                source: item.source,
+                imageUrl: item.imageUrl, 
+                time: item.time
+            };
+
+            newsList.push(newsItem);
+            broadcast(newsItem);
+        }
+    });
+
+    newsList.sort((a, b) => new Date(b.time) - new Date(a.time));
+
+    if (newsList.length > MAX_NEWS) {
+        newsList = newsList.slice(0, MAX_NEWS);
+    }
 }
 
-setInterval(fetchNews, 2000);
-fetchNews(); 
+// הפונקציה הראשית והחכמה - סורקת את הכל אחת לדקה
+async function fetchAllChannels() {
+    console.log("מתחיל סבב סריקת ערוצים...");
+
+    for (let i = 0; i < channels.length; i++) {
+        const channel = channels[i];
+        
+        // דילוג על ערוצים עם כתובת ריקה
+        if (!channel.url || channel.url.trim() === '') continue;
+
+        try {
+            await fetchChannelData(channel);
+        } catch (error) {
+            console.error(`שגיאה במשיכת נתונים מ- ${channel.name}:`, error.message);
+        }
+
+        // --- קסם מניעת החסימות ---
+        // השרת ממתין חצי שנייה (500ms) לפני שהוא עובר לאתר הבא
+        await new Promise(resolve => setTimeout(resolve, 500));
+    }
+    
+    console.log("סבב הסריקה הסתיים. נמשכו 1000 הודעות (מקסימום)");
+}
+
+// הגדרת זמן ההמתנה בין סבב לסבב - 60 שניות
+const FETCH_INTERVAL = 60 * 1000; 
+
+// הפעלת הלולאה המחזורית לנצח (כל 60 שניות)
+setInterval(fetchAllChannels, FETCH_INTERVAL);
+
+// הפעלה ראשונית מיד כשהשרת עולה
+fetchAllChannels();
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
