@@ -115,15 +115,25 @@ async function fetchNews() {
         if (channel.type === 'rss') {
             const feed = await parser.parseURL(channel.url);
             itemsToProcess = feed.items.map(item => {
-                // משיכת התוכן המלא (אם קיים ב-RSS) וניקוי תגיות HTML
                 const rawContent = item.content || item.contentSnippet || '';
-                const cleanText = rawContent.replace(/<[^>]*>?/gm, ' ').trim();
+                
+                // ניקוי יסודי של תגיות HTML קורחות (כמו <p> בערוץ 7)
+                let cleanText = cheerio.load(rawContent).text();
+                cleanText = cleanText.replace(/<[^>]+>/g, '').trim();
+
+                // חיפוש תמונה ב-RSS
+                let imageUrl = item.enclosure ? item.enclosure.url : null;
+                if (!imageUrl) {
+                    const imgMatch = rawContent.match(/<img[^>]+src="([^">]+)"/i);
+                    if (imgMatch) imageUrl = imgMatch[1];
+                }
                 
                 return {
                     title: item.title,
-                    content: cleanText, // התוכן המלא והנקי
+                    content: cleanText, 
                     link: item.link,
                     source: channel.name,
+                    imageUrl: imageUrl, // הוספנו תמונה
                     time: item.isoDate || new Date().toISOString()
                 };
             });
@@ -137,17 +147,38 @@ async function fetchNews() {
                 if (!textEl.length) return;
 
                 let fullText = textEl.text().trim();
-                let title = fullText.replace(/\n/g, ' '); 
-                title = title.length > 80 ? title.substring(0, 80) + '...' : title;
+                
+                // הסרת כיתובי התגובות מהסוף
+                fullText = fullText.replace(/\d+\s*תגובות/g, '').replace(/תגובה\s*אחת/g, '').replace(/\n+$/, '').trim();
+
+                // חלוקה חכמה לכותרת ותוכן כדי למנוע כפילויות
+                let lines = fullText.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+                let title = lines.length > 0 ? lines[0] : '';
+                let content = lines.length > 1 ? lines.slice(1).join('\n') : '';
+
+                // חיתוך כותרות ארוכות מדי
+                if (title.length > 100) {
+                    content = title.substring(100) + (content ? '\n' + content : '');
+                    title = title.substring(0, 100) + '...';
+                }
+
+                // שליפת תמונה מטלגרם (אם יש)
+                let imageUrl = null;
+                const styleWrap = $(el).find('.tgme_widget_message_photo_wrap').attr('style');
+                if (styleWrap) {
+                    const match = styleWrap.match(/background-image:url\('([^']+)'\)/);
+                    if (match) imageUrl = match[1];
+                }
                 
                 const timeStr = $(el).find('time').attr('datetime');
                 const link = $(el).find('.tgme_widget_message_date').attr('href') || channel.url;
 
                 itemsToProcess.push({
                     title: title,
-                    content: fullText, // התוכן המלא של הפוסט
+                    content: content, 
                     link: link,
                     source: channel.name,
+                    imageUrl: imageUrl, // הוספנו תמונה
                     time: timeStr ? new Date(timeStr).toISOString() : new Date().toISOString()
                 });
             });
@@ -162,9 +193,10 @@ async function fetchNews() {
                 const newsItem = {
                     hash,
                     title: item.title,
-                    content: item.content, // שמירת התוכן באובייקט הנשלח למשתמש
+                    content: item.content, 
                     link: item.link,
                     source: item.source,
+                    imageUrl: item.imageUrl, // העברת התמונה הלאה למשתמשים
                     time: item.time
                 };
 
@@ -186,7 +218,6 @@ async function fetchNews() {
     currentSourceIndex = (currentSourceIndex + 1) % channels.length;
 }
 
-// זמן המתנה קצר - 2 שניות לערוץ, כפי שהגדרנו למען המהירות
 setInterval(fetchNews, 2000);
 fetchNews(); 
 
