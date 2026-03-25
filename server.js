@@ -56,6 +56,42 @@ let currentSourceIndex = 0;
 // חלק 1: נקודות קצה בשרת (API Endpoints)
 // ==========================================
 
+// 1. קבלת החדשות האחרונות (למשתמש שרק עכשיו פתח את התוסף)
+app.get('/', (req, res) => {
+    res.json(newsList);
+});
+
+// 2. חיבור זמן אמת - הלב של המערכת (SSE)
+app.get('/stream', (req, res) => {
+    res.setHeader('Content-Type', 'text/event-stream');
+    res.setHeader('Cache-Control', 'no-cache');
+    res.setHeader('Connection', 'keep-alive');
+    res.flushHeaders(); 
+
+    const clientId = Date.now();
+    clients.push({ id: clientId, res });
+
+    res.write(`data: ${JSON.stringify({ type: 'connected' })}\n\n`);
+
+    req.on('close', () => {
+        clients = clients.filter(client => client.id !== clientId);
+    });
+});
+
+// 3. בדיקת חיים - שומר על השרת ער (בשרתים חינמיים כמו Render)
+app.get('/ping', (req, res) => {
+    res.send('pong');
+});
+
+// ==========================================
+// חלק 2: מנוע איסוף חדשות (Collector)
+// ==========================================
+
+// יצירת מזהה ייחודי למניעת כפילויות
+function generateHash(text) {
+    return crypto.createHash('md5').update(text).digest('hex');
+}
+
 // שידור הודעה לכל המשתמשים המחוברים מיד
 function broadcast(newsItem) {
     clients.forEach(client => {
