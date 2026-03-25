@@ -10,7 +10,7 @@ app.use(cors());
 const parser = new Parser();
 let newsList = []; 
 let clients = []; 
-const MAX_NEWS = 200; 
+const MAX_NEWS = 1000; 
 
 // רשימת הערוצים הנקייה (רק מקורות שומרי הלכה, הצלה וביטחון)
 const channels = [
