@@ -3,16 +3,25 @@ const cors = require('cors');
 const crypto = require('crypto');
 const Parser = require('rss-parser');
 const cheerio = require('cheerio'); 
+const Pusher = require('pusher'); // הוספנו את המערכת העולמית
 
 const app = express();
 app.use(cors());
 
 const parser = new Parser();
 let newsList = []; 
-let clients = []; 
-const MAX_NEWS = 1000; // הגדלנו ל-1000 כדי שהתוסף יתמלא
+const MAX_NEWS = 1000; 
 
-// רשימת הערוצים הנקייה (רק מקורות שומרי הלכה, הצלה וביטחון)
+// חיבור לשרתי השידור העולמיים של Pusher (הכנס את הנתונים שלך מכאן!)
+const pusher = new Pusher({
+  app_id = "2132742"
+key = "317621c007c6e7988c70"
+secret = "3596169ab7ac3803c86d"
+cluster = "ap2"
+  useTLS: true
+});
+
+// --- רשימת הערוצים שלך נשארת כאן בדיוק אותו דבר ---
 const channels = [
     { name: "JDN (אתר)", url: "https://www.jdn.co.il/feed/", type: "rss" },
     { name: "ערוץ 7 (אתר)", url: "https://www.inn.co.il/Rss.aspx?Category=1", type: "rss" },
@@ -51,40 +60,19 @@ const channels = [
     { name: "הלכה יומית", url: "https://t.me/s/halacha_yomit", type: "telegram" }
 ];
 
-// ==========================================
-// חלק 1: נקודות קצה בשרת (API Endpoints)
-// ==========================================
-
+// נקודת הקצה למשיכת ההיסטוריה כשפותחים את הדפדפן
 app.get('/', (req, res) => {
     res.json(newsList);
 });
-
-app.get('/stream', (req, res) => {
-    res.setHeader('Content-Type', 'text/event-stream');
-    res.setHeader('Cache-Control', 'no-cache');
-    res.setHeader('Connection', 'keep-alive');
-    res.flushHeaders(); 
-
-    const clientId = Date.now();
-    clients.push({ id: clientId, res });
-
-    res.write(`data: ${JSON.stringify({ type: 'connected' })}\n\n`);
-
-    req.on('close', () => {
-        clients = clients.filter(client => client.id !== clientId);
-    });
-});
-
-app.get('/ping', (req, res) => {
-    res.send('pong');
-});
-
-// ==========================================
-// חלק 2: מנוע איסוף חדשות (Collector)
-// ==========================================
-
+// מחקנו את ה-app.get('/stream') כי עכשיו Pusher מנהל את הלקוחות!
 function generateHash(text) {
     return crypto.createHash('md5').update(text).digest('hex');
+}
+// הפונקציה ששולחת את המידע החוצה (עכשיו היא שולחת ל-Pusher במקום ללקוחות)
+function broadcast(newsItem) {
+    // השרת אומר ל-Pusher: "קח את הידיעה ופזר אותה לכולם בערוץ news-channel"
+    pusher.trigger("news-channel", "new-alert", newsItem)
+      .catch(err => console.error("שגיאה בשידור ל-Pusher:", err));
 }
 
 function broadcast(newsItem) {
