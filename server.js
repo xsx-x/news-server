@@ -79,10 +79,7 @@ const channels = [
     { name: "יוסי אליעזר - 360", url: "https://t.me/s/yosieliezer", type: "telegram" },
     
     // --- RSS נוספים של אתרים גדולים ---
-    { name: "בחדרי חרדים (אתר)", url: "https://www.bhol.co.il/rss.aspx", type: "rss" },
-    { name: "אייס (אתר)", url: "https://www.ice.co.il/rss/", type: "rss" },
-    { name: "כלכליסט (אתר)", url: "https://www.calcalist.co.il/GeneralRSS/0,16335,L-8,00.xml", type: "rss" },
-    { name: "דה מרקר (אתר)", url: "https://www.themarker.com/srv/rss/all", type: "rss" }
+    { name: "אייס (אתר)", url: "https://www.ice.co.il/rss/", type: "rss" }
 ];
 
 app.get('/', (req, res) => {
