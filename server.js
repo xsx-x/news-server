@@ -52,7 +52,37 @@ const channels = [
     { name: "מעריב", url: "https://t.me/s/maarivonline", type: "telegram" },
     { name: "גלובס", url: "https://t.me/s/globesnews", type: "telegram" },
     { name: "עכשיו 14", url: "https://t.me/s/now14updates", type: "telegram" },
-    { name: "כיכר השבת", url: "https://t.me/s/kikar_news", type: "telegram" }
+    { name: "כיכר השבת", url: "https://t.me/s/kikar_news", type: "telegram" },
+    
+    // --- ערוצים חדשים לבקשתך (מאוד פעילים) ---
+    { name: "החדשות החמות", url: "https://t.me/s/thehotnews", type: "telegram" },
+    { name: "חדשות גלובל", url: "https://t.me/s/global_news_israel", type: "telegram" },
+    { name: "צ'אט כתבים", url: "https://t.me/s/Chat_Khatavim", type: "telegram" },
+    { name: "המוקד", url: "https://t.me/s/Hamoked_il", type: "telegram" },
+    { name: "ידיעות בני ברק", url: "https://t.me/s/Yedioth_Bnei_Brak", type: "telegram" },
+    { name: "קומנדו ניוז", url: "https://t.me/s/commando_news", type: "telegram" },
+    { name: "הסקופים", url: "https://t.me/s/scoops_news", type: "telegram" },
+    { name: "מוטי קסטל", url: "https://t.me/s/moti_kastel", type: "telegram" },
+    
+    // --- תוספות של ערוצים עם "מבול" של עדכונים ---
+    { name: "בחדרי חרדים", url: "https://t.me/s/bhol_news", type: "telegram" },
+    { name: "חדשות לפני כולם", url: "https://t.me/s/News_Now_Israel", type: "telegram" },
+    { name: "דניאל עמרם ללא צנזורה", url: "https://t.me/s/danielamram3", type: "telegram" },
+    { name: "אדר גיציס (N12)", url: "https://t.me/s/adar_gitsis", type: "telegram" },
+    { name: "הלל ביטון רוזן", url: "https://t.me/s/HallelBittonRosen", type: "telegram" },
+    { name: "ישראל ללא צנזורה", url: "https://t.me/s/israel_news_no_censorship", type: "telegram" },
+    { name: "עזה אקסקלוסיב", url: "https://t.me/s/Gaza_Exclusive", type: "telegram" },
+    { name: "חדשות אמת", url: "https://t.me/s/emethadashot", type: "telegram" },
+    { name: "חדשות הביטחון", url: "https://t.me/s/security_news_il", type: "telegram" },
+    { name: "מבזקי רעם", url: "https://t.me/s/mivzakeraam", type: "telegram" },
+    { name: "חדשות המל''ל (לא רשמי)", url: "https://t.me/s/News_israel_24_7", type: "telegram" },
+    { name: "יוסי אליעזר - 360", url: "https://t.me/s/yosieliezer", type: "telegram" },
+    
+    // --- RSS נוספים של אתרים גדולים ---
+    { name: "בחדרי חרדים (אתר)", url: "https://www.bhol.co.il/rss.aspx", type: "rss" },
+    { name: "אייס (אתר)", url: "https://www.ice.co.il/rss/", type: "rss" },
+    { name: "כלכליסט (אתר)", url: "https://www.calcalist.co.il/GeneralRSS/0,16335,L-8,00.xml", type: "rss" },
+    { name: "דה מרקר (אתר)", url: "https://www.themarker.com/srv/rss/all", type: "rss" }
 ];
 
 app.get('/', (req, res) => {
