@@ -6,7 +6,7 @@
     "storage",
     "notifications",
     "alarms",
-    "pusher": "^5.2.0"
+    "pusher"
   ],
   "host_permissions": [
     "https://my-news-api-l67d.onrender.com/*"
