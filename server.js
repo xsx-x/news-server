@@ -159,18 +159,12 @@ async function fetchChannelData(channel) {
             const $ = cheerio.load(html);
 
             $('.tgme_widget_message').each((i, el) => {
-const textEl = $(el).find('.tgme_widget_message_text');
-let fullText = textEl.length ? textEl.text().trim() : '';
 
-let imageUrl = null;
-const styleWrap = $(el).find('.tgme_widget_message_photo_wrap').attr('style');
-if (styleWrap) {
-    const match = styleWrap.match(/background-image:url\('([^']+)'\)/);
-    if (match) imageUrl = match[1];
-}
+                const textEl = $(el).find('.tgme_widget_message_text');
+if (!textEl.length) return;
 
-// אם אין גם טקסט וגם אין תמונה - נדלג
-if (!fullText && !imageUrl) return;                fullText = fullText.replace(/\d+\s*תגובות/g, '').replace(/תגובה\s*אחת/g, '').replace(/\n+$/, '').trim();
+let fullText = textEl.text().trim();
+                fullText = fullText.replace(/\d+\s*תגובות/g, '').replace(/תגובה\s*אחת/g, '').replace(/\n+$/, '').trim();
 
                 let lines = fullText.split('\n').map(l => l.trim()).filter(l => l.length > 0);
                 let title = lines.length > 0 ? lines[0] : '';
