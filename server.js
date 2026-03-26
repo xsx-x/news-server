@@ -23,7 +23,6 @@ const channels = [
     { name: "ערוץ 7 (אתר)", url: "https://www.inn.co.il/Rss.aspx?Category=1", type: "rss" },
     { name: "סרוגים (אתר)", url: "https://www.srugim.co.il/feed", type: "rss" },
     { name: "המחדש (אתר)", url: "https://hm-news.co.il/feed/", type: "rss" },
-    { name: "בחדרי חרדים (אתר)", url: "https://www.bhol.co.il/rss.xml", type: "rss" },
     { name: "דובר צהל", url: "https://t.me/s/idfofficial", type: "telegram" },
     { name: "פיקוד העורף", url: "https://t.me/s/PikudHaOref_Official", type: "telegram" },
     { name: "זק״א", url: "https://t.me/s/zaka_il", type: "telegram" },
