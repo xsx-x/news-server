@@ -1,25 +1,3 @@
-
-
-// --- רשימת הערוצים שלך נשארת כאן בדיוק אותו דבר ---
-const channels = [
-   
-    { name: "Ynet מבזקים", url: "https://t.me/s/ynetalert", type: "telegram" },
-    { name: "Ynet חדר חדשות", url: "https://t.me/s/ynetnewsroom", type: "telegram" },
-    { name: "N12 מתפרצות", url: "https://t.me/s/N12breaking", type: "telegram" },
-    { name: "N12 הצ'אט", url: "https://t.me/s/N12updates", type: "telegram" },
-    { name: "חדשות 13", url: "https://t.me/s/news13channel", type: "telegram" },
-    { name: "וואלה! חדשות", url: "https://t.me/s/walla_news", type: "telegram" },
-    { name: "כאן חדשות", url: "https://t.me/s/kan_news", type: "telegram" },
-    { name: "ישראל היום", url: "https://t.me/s/israelhayom", type: "telegram" },
-    { name: "מעריב", url: "https://t.me/s/maarivonline", type: "telegram" },
-    { name: "גלובס", url: "https://t.me/s/globesnews", type: "telegram" },
-    { name: "עכשיו 14", url: "https://t.me/s/now14updates", type: "telegram" },
-    { name: "כיכר השבת", url: "https://t.me/s/kikar_news", type: "telegram" },
-    
-];
-
-
-
 const express = require('express');
 const cors = require('cors');
 const crypto = require('crypto');
@@ -59,6 +37,7 @@ const channels = [
     { name: "אבו עלי אקספרס", url: "https://t.me/s/abualiexpress", type: "telegram" },
     { name: "זירת החדשות", url: "https://t.me/s/ZiratNews", type: "telegram" },
     { name: "מבזקי בטחון 24/7", url: "https://t.me/s/MivzakeyBitachon", type: "telegram" },
+   //מכאן ערוצים נוספים לבדוק
     { name: "Ynet מבזקים", url: "https://t.me/s/ynetalert", type: "telegram" },
     { name: "Ynet חדר חדשות", url: "https://t.me/s/ynetnewsroom", type: "telegram" },
     { name: "N12 מתפרצות", url: "https://t.me/s/N12breaking", type: "telegram" },
