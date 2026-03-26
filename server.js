@@ -232,9 +232,11 @@ async function fetchAllChannels() {
     console.log("מתחיל סבב סריקת ערוצים...");
 
     for (let i = 0; i < channels.length; i++) {
-        const channel = channels[i];
-        if (!channel.url || channel.url.trim() === '') continue;
-
+    const channel = channels[i];
+    if (!channel.url || channel.url.trim() === '') {
+        console.log(`⚠️ השרת דילג על "${channel.name}" כי חסר לו קישור!`);
+        continue;
+    }
         // קריאה לפונקציה (שכבר מכילה הגנת Try/Catch בתוכה)
         await fetchChannelData(channel);
         
