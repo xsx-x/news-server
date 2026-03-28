@@ -1,20 +1,15 @@
 {
-  "manifest_version": 3,
-  "name": "מבזקי חדשות שומרי הלכה",
-  "version": "1.0",
-  "permissions": [
-    "storage",
-    "notifications",
-    "alarms",
-    "pusher"
-  ],
-  "host_permissions": [
-    "https://my-news-api-l67d.onrender.com/*"
-  ],
-  "background": {
-    "service_worker": "background.js"
+  "name": "news-alerts-server",
+  "version": "1.0.0",
+  "description": "שרת למשיכת מבזקי חדשות עבור התוסף",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
   },
-  "action": {
-    "default_popup": "popup.html"
+  "dependencies": {
+    "cheerio": "^1.0.0",
+    "cors": "^2.8.5",
+    "express": "^4.19.0",
+    "rss-parser": "^3.13.0"
   }
 }
